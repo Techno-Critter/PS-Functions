@@ -27,7 +27,7 @@ Function Get-ADDomainDistinguishedName{
 
     .NOTES
     Author: Stan Crider
-    Date:   5May20222
+    Date:   5May2022
     Crap:   Yes, I wrote a function for 6 lines of code. Sue me.
     #>
 
