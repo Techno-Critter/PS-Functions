@@ -1,4 +1,5 @@
-<#
+Function New-ADOUStructure {
+    <#
     .SYNOPSIS
     Checks existence of specified Organizational Unit (OU) tree and creates if necessary. Can
     create multilayer OU structure.
@@ -7,7 +8,7 @@
     For creating multiple embedded OU layers
     Input: OU=TestOU3,OU=TestOU2,OU=TestOU1,OU=ParentTest,DC=acme,DC=com
     Output: A string variable with any error messages or successful creations will be output; message 
-    will not appear if no OU creation attempt is made.
+            will not appear if no OU creation attempt is made.
     Result: Creates Active Directory OU OU=TestOU3,OU=TestOU2,OU=TestOU1,OU=ParentTest,DC=acme,DC=com
 
     .PARAMETER DomainFQDN 
@@ -43,7 +44,7 @@
             $OUExists = [adsi]::Exists("LDAP://" + $OUDistinguishedName)
             If(!$OUExists){
                 # Stage variable arrays
-                $OutputMessage = @()
+                $OUCreationOutputMessage = @()
                 $DCNameArray = @()
                 $OUSplitArray = @()
                 $OUDistinguishedNameSplit = $OUDistinguishedName -split ","
@@ -78,7 +79,7 @@
                             $NewOUError = ("Creation of the OU " + ($OUSplitArray[$SplitCounter] + "," + $IncrementSplit) + " failed miserably.")
                         }
                         If($NewOUError){
-                            $OutputMessage += $NewOUError
+                            $OUCreationOutputMessage += $NewOUError
                             $SplitCounter = (-1)
                         }
                     }
@@ -86,8 +87,9 @@
                     $SplitCounter --
                 }
                 Until($SplitCounter -eq -1)
-                $OutputMessage += "The OU $OUDistinguishedName was successfully created."
-                $OutputMessage
+                $OUCreationOutputMessage += "The OU $OUDistinguishedName was successfully created."
+                # Results message; remark out if no message is desired.
+                $OUCreationOutputMessage
             }
         }
     }
