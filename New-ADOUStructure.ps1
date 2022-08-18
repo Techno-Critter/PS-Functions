@@ -15,7 +15,7 @@ Function New-ADOUStructure {
     An Active Directory distinguished name of an OU to create
 
     .EXAMPLE
-    New-ADOU-Structure -OUDistinguishedName OU=TestOU2,OU=TestOU1,OU=ParentTest,DC=acme,DC=com
+    New-ADOU-Structure -OUDistinguishedName "OU=TestOU2,OU=TestOU1,OU=ParentTest,DC=acme,DC=com"
 
     .INPUTS
     String
