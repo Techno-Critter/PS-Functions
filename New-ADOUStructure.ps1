@@ -11,7 +11,7 @@ Function New-ADOUStructure {
             will not appear if no OU creation attempt is made.
     Result: Creates Active Directory OU OU=TestOU3,OU=TestOU2,OU=TestOU1,OU=ParentTest,DC=acme,DC=com
 
-    .PARAMETER DomainFQDN 
+    .PARAMETER OUDistinguishedName
     An Active Directory distinguished name of an OU to create
 
     .EXAMPLE
