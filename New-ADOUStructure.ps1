@@ -25,7 +25,6 @@
     .NOTES
     Author: Stan Crider
     Date:   8Aug2022
-    Notes:  Function may require .NET to be installed for use with "StartsWith" parameter
     #>
 
     [CmdletBinding()]
@@ -51,7 +50,7 @@
                 
                 # Separate domain name from distinguished name
                 ForEach($DN in $OUDistinguishedNameSplit){
-                    If($DN.StartsWith("DC=")){
+                    If($DN -match "^DC="){
                         $DCNameArray += $DN
                     }
                 }
@@ -59,7 +58,7 @@
 
                 # Separate OU segment from distinguished name
                 ForEach($OUSegment in $OUDistinguishedNameSplit){
-                    If($OUSegment.StartsWith("OU=")){
+                    If($OUSegment -match "^OU="){
                         $OUSplitArray += $OUSegment
                     }
                 }
