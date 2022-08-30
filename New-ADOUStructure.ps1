@@ -22,6 +22,7 @@ Function New-ADOUStructure {
 
     .OUTPUTS
     Creation of Active Directory OU object(s)
+    String message of results including error messages
 
     .NOTES
     Author: Stan Crider
