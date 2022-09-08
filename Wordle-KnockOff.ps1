@@ -12,8 +12,11 @@ $DictionaryFile = "C:\Temp\dictionary_file.txt"
 [int32]$GameWordLength = 5
 # maximum number of attempts
 [int32]$Attempts = 6
+# select a special character to represent an invalid guess
+$WrongCharacter = "_"
 
 ## Functions
+# Compare each character in corresponding locations in same-length words
 Function Compare-Words{
     <#
     .SYNOPSIS
@@ -79,7 +82,7 @@ Function Compare-Words{
             }
             # If letter is not in the word, replace with blank
             Else{
-                $MatchWord += "_"
+                $MatchWord += $WrongCharacter
             }
             # Increment counter to next letter in word
             $CharacterCounter++
@@ -90,54 +93,95 @@ Function Compare-Words{
     }
 }
 
-## Script
-If(Test-Path -Path $DictionaryFile){
-    $DictionaryWordLength = Get-Content -Path $DictionaryFile | Where-Object{$_.length -eq $GameWordLength}
+# Get count of duplicate letters
+Function Get-LetterCount ([string]$string){
+    $CharArray = $string.ToLower().ToCharArray()
+    $HashTable = @{}
+    ForEach($char in $CharArray){ 
+        If(-not $HashTable.ContainsKey($char)){ 
+            $HashTable.Add($char,1)
+        }
+        Else{
+            $HashTable[$char]++
+        }
+    }
+    $HashTable
+}
 
+## Script
+# Verify existence of dictionary file
+If(Test-Path -Path $DictionaryFile){
+    # Pull words that equal desired length for word pool
+    $DictionaryWordLength = Get-Content -Path $DictionaryFile | Where-Object{$_.length -eq $GameWordLength}
+    # Verify words of desired length exist; continue if true
     If($DictionaryWordLength){
+        # Prompt for user verification
         $PlayGame = Read-Host -Prompt "Would you like to play a game? Type 'yes' to continue"
         If(($PlayGame -eq "yes") -or ($PlayGame -eq "y")){
+            # Pull random word from word pool
             $TheWord = $DictionaryWordLength | Get-Random
+            # Set counter for attempts
             $AttemptCounter = 0
+            # Set variable for winning guess
             $CompleteMatch = $false
 
-            Write-Host "The word of the day is: $TheWord"
+            # Provide user instructions
+            Write-Host "A CAPITAL LETTER indicates that the letter is in the correct spot."
+            Write-Host "A lower case letter indicates that the letter is in the word, but not in the correct spot."
+            Write-Host "A `"$WrongCharacter`" indicates that the letter is not in the word."
+            Write-Host "You will have $Attempts attempts to guess the correct word. Good luck."
+
+            #Write-Host "The word of the day is: $TheWord" #For troubleshooting or cheating
             Do{
+                # Increment attempt counter
                 $AttemptCounter++
+                # Check word for validity (length, valid characters, etc.); retry if invalid
                 Do{
+                    $WordCriteria = $false
                     $GuestGuess = Read-Host -Prompt "Enter your $GameWordLength-letter word guess for attempt $AttemptCounter"
                     If($GuestGuess.Length -ne $GameWordLength){
                         Write-Warning "The word $GuestGuess does not equal $GameWordLength characters. Try again."
                     }
-                    If($DictionaryWordLength -contains $GuestGuess){
-                        $DictionaryWord = $true
+                    ElseIf($GuestGuess -notmatch "^[a-zA-Z]+$"){
+                        Write-Warning "The word $GuestGuess contains invalid characters. Try again."
                     }
-                    Else{
-                        $DictionaryWord = $false
+                    ElseIf(!($DictionaryWordLength -contains $GuestGuess)){
                         Write-Warning "The word $GuestGuess is not in the dictionary. Try again."
                     }
+                    Else{
+                        $WordCriteria = $true
+                    }
                 }
-                Until(($GuestGuess.Length -eq $GameWordLength) -and ($DictionaryWord))
+                Until($WordCriteria)
 
+                # Run function for word comparison
                 $MatchWordString = Compare-Words -FirstWord $TheWord -SecondWord $GuestGuess -WordLength $GameWordLength
-                Write-Host ("Attempt " + $AttemptCounter + ": " + $MatchWordString)
+                Write-Host ("Attempt " + $AttemptCounter + " of " + $Attempts + ": " + $MatchWordString)
                 If($TheWord -eq $GuestGuess){
                     $CompleteMatch = $true
                 }
             }
+            # End if word matches or attempts exceeded
             Until(($AttemptCounter -eq $Attempts) -or ($CompleteMatch -eq $true))
-            If($CompleteMatch -eq $false){
-                Write-Host "The word was $TheWord"
+            If($CompleteMatch){
+                Write-Host "Congratulations! You guessed correctly!"
+            }
+            # Provide solution if game is lost
+            Else{
+                Write-Host "Sorry! The word was $TheWord"
             }
         }
+        # Cancel upon invalid user verification
         Else{
             Write-Host "No fun for you today."
         }
     }
+    # Cancel if no words of desired length are found in the dictionary
     Else{
         Write-Warning "No $GameWordLength character words were found."
     }
 }
+# Cancel because of stupidity inputting the dictionary file
 Else{
     Write-Warning "The dictionary file $DictionaryFile does not exist. Game over, man! Game over!"
 }
