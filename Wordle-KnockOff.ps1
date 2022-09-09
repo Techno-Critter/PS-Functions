@@ -1,5 +1,5 @@
 <#
-Author: Stan Crider
+Author: Stan Crider and Dennis Magee
 Date:   6 September 2022
 Crap:   Just playing around to see if I can do it. And I really like Wordle.
 Dictionary file used: http://www.math.sjsu.edu/~foster/dictionary.txt
@@ -16,6 +16,34 @@ $DictionaryFile = "C:\Temp\dictionary_file.txt"
 $WrongCharacter = "_"
 
 ## Functions
+# Get count of duplicate letters
+Function Get-LetterCount ([string]$string){
+    $CharArray = $string.ToLower().ToCharArray()
+    $HashTable = @{}
+    ForEach($char in $CharArray){ 
+        If(-not $HashTable.ContainsKey($char)){ 
+            $HashTable.Add($char,1)
+        }
+        Else{
+            $HashTable[$char]++
+        }
+    }
+    $HashTable
+}
+
+# Counts items in array
+Function Get-Index ($Array, $Item){
+    $Index = 0
+    $Output = @()
+    While($Index -lt $Array.count){
+        If($Array[$Index] -eq $Item){
+            $Output+=$Index
+        }
+        $Index++
+    }
+    $Output
+}
+
 # Compare each character in corresponding locations in same-length words
 Function Compare-Words{
     <#
@@ -69,16 +97,91 @@ Function Compare-Words{
 
     [int]$CharacterCounter = 0
     $MatchWord = @()
+    $MatchWordHash = @{}
+    $FirstWordHash = Get-LetterCount $FirstWord
+    $SecondWordHash = Get-LetterCount $SecondWord
 
     If(($FirstWord.Length -eq $WordLength) -and ($SecondWord.Length -eq $WordLength)){
         Do{
+            $FWchar = $FirstWord.Substring($CharacterCounter,1).ToLower()
+            $SWchar = $SecondWord.Substring($CharacterCounter,1).ToLower()
+
             # If letter is in correct location, capitalize letter
-            If($FirstWord.Substring($CharacterCounter,1) -eq $SecondWord.Substring($CharacterCounter,1)){
-                $MatchWord += ($SecondWord.Substring($CharacterCounter,1)).ToUpper()
+            If($FWchar -eq $SWchar){
+                $MatchWord += $SWchar.ToUpper()
+                # If this is the first time seeing the letter, add it to the match hashtable
+                If(-not $MatchWordHash.ContainsKey($SWchar)){
+                    $MatchWordHash.Add($SWchar,1)
+                }
+                # Else, add to the count of the letter in the hashtable
+                Else{
+                    $MatchWordHash[$SWchar]++
+                }
             }
             # If letter is in the word, but not in correct location, set letter to lower case
-            ElseIf($FirstWord.Contains($SecondWord.Substring($CharacterCounter,1))){
-                $MatchWord += ($SecondWord.Substring($CharacterCounter,1)).ToLower()
+            ElseIf($FirstWord.Contains($SWchar)){
+                # If this is the first time seeing the letter
+                If(-not $MatchWordHash.ContainsKey($SWchar)){
+                    # If the second word has more of the letter than the first word,
+                    # figure out if this letter needs to be blank
+                    If($FirstWordHash[[char]$SWchar] -lt $SecondWordHash[[char]$SWchar]){
+                        # Locations of the letter in the first and second words, and exact matches
+                        $FirstIndex = Get-Index $FirstWord.ToCharArray() $SWchar
+                        $SecondIndex = Get-Index $SecondWord.ToCharArray() $SWchar
+                        $Exacts = $FirstIndex | Where-Object {$_ -in $SecondIndex}
+
+                        # If the second word has all of this letter in the right spot,
+                        # blank this extra letter that is in the wrong spot
+                        If($Exacts.count -eq $FirstIndex.count){
+                            $MatchWord += $WrongCharacter
+                        }
+                        # Else, add it to the match word and match hashtable
+                        Else{
+                            $MatchWord += $SWchar
+                            $MatchWordHash.Add($SWchar,1)
+                        }
+                    }
+                    # If the second word does not have more of this letter than the first word,
+                    # add it to the match word and match hashtable
+                    Else{
+                        $MatchWord += $SWchar
+                        $MatchWordHash.Add($SWchar,1)
+                    }
+                }
+                # If the match hashtable has less of this letter than the first word
+                ElseIf($MatchWordHash[$SWchar] -lt $FirstWordHash[[char]$SWchar]){
+                    # If the first word has more of this letter than the second,
+                    # add it to the match word and increase the count in the match hashtable
+                    If($FirstWordHash[[char]$SWchar] -ge $SecondWordHash[[char]$SWchar]){
+                        $MatchWord += $SWchar
+                        $MatchWordHash[$SWchar]++
+                    }
+                    # If the second word has more of this letter than the first word,
+                    # figure out if this letter needs to be blank
+                    Else{
+                        # Locations of the letter in the first and second words, and exact matches
+                        $FirstIndex = Get-Index $FirstWord.ToCharArray() $SWchar
+                        $SecondIndex = Get-Index $SecondWord.ToCharArray() $SWchar
+                        $Exacts = $FirstIndex | Where-Object {$_ -in $SecondIndex}
+
+                        # If the count of exact matches and letters already in the match hashtable
+                        # is less than the number of this letter in the first word,
+                        # add it to the match word and increase the count in the match hashtable
+                        If(($Exacts.count + $MatchWordHash[$SWchar]) -lt $FirstIndex.count){
+                            $MatchWord += $SWchar
+                            $MatchWordHash[$SWchar]++
+                        }
+                        # If the count is greater than or equal to the number in the first word,
+                        # blank this extra letter that is in the wrong spot
+                        Else{
+                            $MatchWord += $WrongCharacter
+                        }
+                    }
+                }
+                # Match hashtable has the same count as the first word
+                Else{
+                    $MatchWord += $WrongCharacter
+                }
             }
             # If letter is not in the word, replace with blank
             Else{
@@ -91,21 +194,6 @@ Function Compare-Words{
 
         $MatchWord -join ""
     }
-}
-
-# Get count of duplicate letters
-Function Get-LetterCount ([string]$string){
-    $CharArray = $string.ToLower().ToCharArray()
-    $HashTable = @{}
-    ForEach($char in $CharArray){ 
-        If(-not $HashTable.ContainsKey($char)){ 
-            $HashTable.Add($char,1)
-        }
-        Else{
-            $HashTable[$char]++
-        }
-    }
-    $HashTable
 }
 
 ## Script
@@ -126,9 +214,9 @@ If(Test-Path -Path $DictionaryFile){
             $CompleteMatch = $false
 
             # Provide user instructions
-            Write-Host "A CAPITAL LETTER indicates that the letter is in the correct spot."
-            Write-Host "A lower case letter indicates that the letter is in the word, but not in the correct spot."
-            Write-Host "A `"$WrongCharacter`" indicates that the letter is not in the word."
+            Write-Host -ForegroundColor Green "A green CAPITAL LETTER indicates that the letter is in the correct spot."
+            Write-Host -ForegroundColor Yellow "A yellow lower case letter indicates that the letter is in the word, but not in the correct spot."
+            Write-Host -ForegroundColor Red "A red `"$WrongCharacter`" indicates that the letter is not in the word."
             Write-Host "You will have $Attempts attempts to guess the correct word. Good luck."
 
             #Write-Host "The word of the day is: $TheWord" #For troubleshooting or cheating
@@ -156,7 +244,16 @@ If(Test-Path -Path $DictionaryFile){
 
                 # Run function for word comparison
                 $MatchWordString = Compare-Words -FirstWord $TheWord -SecondWord $GuestGuess -WordLength $GameWordLength
-                Write-Host ("Attempt " + $AttemptCounter + " of " + $Attempts + ": " + $MatchWordString)
+                Write-Host -NoNewline "Attempt ${AttemptCounter}: "
+                ForEach($Character in $MatchWordString.ToCharArray()){
+                    Switch -Regex -CaseSensitive ($Character){
+                        $WrongCharacter {$LetterColor = 'Red';break}
+                        '[A-Z]' {$LetterColor =  'Green';break}
+                        '[a-z]' {$LetterColor = 'Yellow';break}
+                    }
+                    Write-Host -NoNewline -ForegroundColor $LetterColor $Character
+                }
+                Write-Host ""
                 If($TheWord -eq $GuestGuess){
                     $CompleteMatch = $true
                 }
@@ -164,11 +261,11 @@ If(Test-Path -Path $DictionaryFile){
             # End if word matches or attempts exceeded
             Until(($AttemptCounter -eq $Attempts) -or ($CompleteMatch -eq $true))
             If($CompleteMatch){
-                Write-Host "Congratulations! You guessed correctly!"
+                Write-Host -ForegroundColor Green "Congratulations! You guessed correctly!"
             }
             # Provide solution if game is lost
             Else{
-                Write-Host "Sorry! The word was $TheWord"
+                Write-Host -ForegroundColor Red "Sorry! The word was $TheWord"
             }
         }
         # Cancel upon invalid user verification
