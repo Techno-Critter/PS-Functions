@@ -269,7 +269,7 @@ If(Test-Path -Path $DictionaryFile){
             }
             # Provide solution if game is lost
             Else{
-                Write-Host -ForegroundColor $IncorrectLetterColor "Sorry! The word was $TheWord"
+                Write-Host -ForegroundColor $IncorrectLetterColor "Sorry! The word was $TheWord."
             }
         }
         # Cancel upon invalid user verification
