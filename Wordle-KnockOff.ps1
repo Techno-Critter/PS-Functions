@@ -14,8 +14,11 @@ $DictionaryFile = "C:\Temp\dictionary_file.txt"
 [int32]$Attempts = 6
 # select a special character to represent an invalid guess
 $WrongCharacter = "_"
+# color for correct letter and location
 $CorrectLocationLetterColor = "green"
+# color for correct letter/incorrect location
 $CorrectLetterIncorrectLocationColor = "yellow"
+# color for incorrect letter
 $IncorrectLetterColor = "red"
 
 ## Functions
