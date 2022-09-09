@@ -200,6 +200,7 @@ Function Compare-Words{
 # Verify existence of dictionary file
 If(Test-Path -Path $DictionaryFile){
     # Pull words that equal desired length for word pool
+    Write-Host "Loading dictionary file. Please standby..."
     $DictionaryWordLength = Get-Content -Path $DictionaryFile | Where-Object{$_.length -eq $GameWordLength}
     # Verify words of desired length exist; continue if true
     If($DictionaryWordLength){
