@@ -14,6 +14,9 @@ $DictionaryFile = "C:\Temp\dictionary_file.txt"
 [int32]$Attempts = 6
 # select a special character to represent an invalid guess
 $WrongCharacter = "_"
+$CorrectLocationLetterColor = "green"
+$CorrectLetterIncorrectLocationColor = "yellow"
+$IncorrectLetterColor = "red"
 
 ## Functions
 # Get count of duplicate letters
@@ -74,7 +77,7 @@ Function Compare-Words{
     Matching letters
 
     .NOTES
-    Author: Stan Crider
+    Author: Stan Crider and Dennis Magee
     Date:   6Sept2022
     Crap:   Compare 2 string values for matching letters
     #>
@@ -215,9 +218,9 @@ If(Test-Path -Path $DictionaryFile){
             $CompleteMatch = $false
 
             # Provide user instructions
-            Write-Host -ForegroundColor Green "A green CAPITAL LETTER indicates that the letter is in the correct spot."
-            Write-Host -ForegroundColor Yellow "A yellow lower case letter indicates that the letter is in the word, but not in the correct spot."
-            Write-Host -ForegroundColor Red "A red `"$WrongCharacter`" indicates that the letter is not in the word."
+            Write-Host -ForegroundColor $CorrectLocationLetterColor "A $CorrectLocationLetterColor CAPITAL LETTER indicates that the letter is in the correct spot."
+            Write-Host -ForegroundColor $CorrectLetterIncorrectLocationColor "A $CorrectLetterIncorrectLocationColor lower case letter indicates that the letter is in the word, but not in the correct spot."
+            Write-Host -ForegroundColor $IncorrectLetterColor "A $IncorrectLetterColor `"$WrongCharacter`" indicates that the letter is not in the word."
             Write-Host "You will have $Attempts attempts to guess the correct word. Good luck."
 
             #Write-Host "The word of the day is: $TheWord" #For troubleshooting or cheating
@@ -248,9 +251,9 @@ If(Test-Path -Path $DictionaryFile){
                 Write-Host -NoNewline "Attempt ${AttemptCounter}: "
                 ForEach($Character in $MatchWordString.ToCharArray()){
                     Switch -Regex -CaseSensitive ($Character){
-                        $WrongCharacter {$LetterColor = 'Red';break}
-                        '[A-Z]' {$LetterColor =  'Green';break}
-                        '[a-z]' {$LetterColor = 'Yellow';break}
+                        $WrongCharacter {$LetterColor = $IncorrectLetterColor;break}
+                        '[A-Z]' {$LetterColor =  $CorrectLocationLetterColor;break}
+                        '[a-z]' {$LetterColor = $CorrectLetterIncorrectLocationColor;break}
                     }
                     Write-Host -NoNewline -ForegroundColor $LetterColor $Character
                 }
@@ -262,11 +265,11 @@ If(Test-Path -Path $DictionaryFile){
             # End if word matches or attempts exceeded
             Until(($AttemptCounter -eq $Attempts) -or ($CompleteMatch -eq $true))
             If($CompleteMatch){
-                Write-Host -ForegroundColor Green "Congratulations! You guessed correctly!"
+                Write-Host -ForegroundColor $CorrectLocationLetterColor "Congratulations! You guessed correctly!"
             }
             # Provide solution if game is lost
             Else{
-                Write-Host -ForegroundColor Red "Sorry! The word was $TheWord"
+                Write-Host -ForegroundColor $IncorrectLetterColor "Sorry! The word was $TheWord"
             }
         }
         # Cancel upon invalid user verification
