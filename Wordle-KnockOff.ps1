@@ -165,10 +165,10 @@ Function Compare-Words{
                     # If the second word has more of this letter than the first word,
                     # figure out if this letter needs to be blank
                     Else{
-                        # Locations of the letter in the first and second words, and exact matches
+                        # Locations of the letter in the first and second words, and exact matches that have not been found yet
                         $FirstIndex = Get-Index $FirstWord.ToCharArray() $SWchar
                         $SecondIndex = Get-Index $SecondWord.ToCharArray() $SWchar
-                        $Exacts = $FirstIndex | Where-Object {$_ -in $SecondIndex}
+                        $Exacts = $FirstIndex | Where-Object {$_ -in $SecondIndex -and $_ -gt $CharacterCounter}
 
                         # If the count of exact matches and letters already in the match hashtable
                         # is less than the number of this letter in the first word,
