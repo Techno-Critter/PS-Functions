@@ -217,8 +217,6 @@ If(Test-Path -Path $DictionaryFile){
             $TheWord = $DictionaryWordLength | Get-Random
             # Set counter for attempts
             $AttemptCounter = 0
-            # Set variable for winning guess
-            $CompleteMatch = $false
 
             # Provide user instructions
             Write-Host -ForegroundColor $CorrectLocationLetterColor "A $CorrectLocationLetterColor CAPITAL LETTER indicates that the letter is in the correct spot."
@@ -262,11 +260,11 @@ If(Test-Path -Path $DictionaryFile){
                 }
                 Write-Host ""
                 If($TheWord -eq $GuestGuess){
-                    $CompleteMatch = $true
+                    $AttemptCounter -eq $Attempts
                 }
             }
             # End if word matches or attempts exceeded
-            Until(($AttemptCounter -eq $Attempts) -or ($CompleteMatch -eq $true))
+            Until($AttemptCounter -eq $Attempts)
             If($CompleteMatch){
                 Write-Host -ForegroundColor $CorrectLocationLetterColor "Congratulations! You guessed correctly!"
             }
