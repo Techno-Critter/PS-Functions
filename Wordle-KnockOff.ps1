@@ -265,7 +265,7 @@ If(Test-Path -Path $DictionaryFile){
             }
             # End if word matches or attempts exceeded
             Until($AttemptCounter -eq $Attempts)
-            If($CompleteMatch){
+            If($TheWord -eq $GuestGuess){
                 Write-Host -ForegroundColor $CorrectLocationLetterColor "Congratulations! You guessed correctly!"
             }
             # Provide solution if game is lost
