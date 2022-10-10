@@ -31,6 +31,8 @@ Function New-ADOUStructure {
 
     [CmdletBinding(SupportsShouldProcess)]
     Param(
+        # Stage output array
+        $OUCreationOutputMessage = @()
         [Parameter(Mandatory,
         HelpMessage='What is the distinguished name of the Active Directory Organization Unit you would like to create?')]
 
@@ -46,7 +48,6 @@ Function New-ADOUStructure {
                 $OUExists = [adsi]::Exists("LDAP://" + $OUDistinguishedName)
                 If(!$OUExists){
                     # Stage variable arrays
-                    $OUCreationOutputMessage = @()
                     $DCNameArray = @()
                     $OUSplitArray = @()
                     $OUDistinguishedNameSplit = $OUDistinguishedName -split ","
@@ -90,10 +91,13 @@ Function New-ADOUStructure {
                     }
                     Until($SplitCounter -eq -1)
                     $OUCreationOutputMessage += "The OU $OUDistinguishedName was successfully created."
-                    # Results message; remark out if no message is desired.
-                    $OUCreationOutputMessage
                 }
             }
         }
+        Else{
+            $OUCreationOutputMessage += "The 'WhatIF' parameter was used. Function will not run."
+        }
+        # Results message; remark out if no message is desired.
+        $OUCreationOutputMessage
     }
 }
