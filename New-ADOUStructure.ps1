@@ -29,7 +29,7 @@ Function New-ADOUStructure {
     Date:   8Aug2022
     #>
 
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     Param(
         [Parameter(Mandatory,
         HelpMessage='What is the distinguished name of the Active Directory Organization Unit you would like to create?')]
@@ -39,58 +39,60 @@ Function New-ADOUStructure {
     )
 
     Process{
-        # Validate distinguished name format
-        If($OUDistinguishedName -match "^(?:(?:OU|DC)\=\w+,)*DC\=\w+$"){
-            # Check existence of OU and create if OU doesn't exist
-            $OUExists = [adsi]::Exists("LDAP://" + $OUDistinguishedName)
-            If(!$OUExists){
-                # Stage variable arrays
-                $OUCreationOutputMessage = @()
-                $DCNameArray = @()
-                $OUSplitArray = @()
-                $OUDistinguishedNameSplit = $OUDistinguishedName -split ","
-                
-                # Separate domain name from distinguished name
-                ForEach($DN in $OUDistinguishedNameSplit){
-                    If($DN -match "^DC="){
-                        $DCNameArray += $DN
-                    }
-                }
-                $IncrementSplit = $DCNameArray -join ","
+        If($PSCmdlet.ShouldProcess($OUDistinguishedName)){
+            # Validate distinguished name format
+            If($OUDistinguishedName -match "^(?:(?:OU|DC)\=\w+,)*DC\=\w+$"){
+                # Check existence of OU and create if OU doesn't exist
+                $OUExists = [adsi]::Exists("LDAP://" + $OUDistinguishedName)
+                If(!$OUExists){
+                    # Stage variable arrays
+                    $OUCreationOutputMessage = @()
+                    $DCNameArray = @()
+                    $OUSplitArray = @()
+                    $OUDistinguishedNameSplit = $OUDistinguishedName -split ","
 
-                # Separate OU segment from distinguished name
-                ForEach($OUSegment in $OUDistinguishedNameSplit){
-                    If($OUSegment -match "^OU="){
-                        $OUSplitArray += $OUSegment
-                    }
-                }
-
-                # Create counter for number of OU splits in distinguished name
-                $SplitCounter = (($OUSplitArray | Measure-Object).Count) -1
-
-                # Begin building each OU layer in distinguished name starting with highest number in array (parent)
-                Do{
-                    $NewOUError = $null
-                    If(!([adsi]::Exists("LDAP://" + ($OUSplitArray[$SplitCounter] + "," + $IncrementSplit)))){
-                        $OUName = ($OUSplitArray[$SplitCounter]).TrimStart("OU=")
-                        Try{
-                            New-ADOrganizationalUnit -Name $OUName -Path $IncrementSplit -ErrorAction Stop
-                        }
-                        Catch{
-                            $NewOUError = ("Creation of the OU " + ($OUSplitArray[$SplitCounter] + "," + $IncrementSplit) + " failed miserably.")
-                        }
-                        If($NewOUError){
-                            $OUCreationOutputMessage += $NewOUError
-                            $SplitCounter = (-1)
+                    # Separate domain name from distinguished name
+                    ForEach($DN in $OUDistinguishedNameSplit){
+                        If($DN -match "^DC="){
+                            $DCNameArray += $DN
                         }
                     }
-                    $IncrementSplit = ($OUSplitArray[$SplitCounter] + "," + $IncrementSplit)
-                    $SplitCounter --
+                    $IncrementSplit = $DCNameArray -join ","
+
+                    # Separate OU segment from distinguished name
+                    ForEach($OUSegment in $OUDistinguishedNameSplit){
+                        If($OUSegment -match "^OU="){
+                            $OUSplitArray += $OUSegment
+                        }
+                    }
+
+                    # Create counter for number of OU splits in distinguished name
+                    $SplitCounter = (($OUSplitArray | Measure-Object).Count) -1
+
+                    # Begin building each OU layer in distinguished name starting with highest number in array (parent)
+                    Do{
+                        $NewOUError = $null
+                        If(!([adsi]::Exists("LDAP://" + ($OUSplitArray[$SplitCounter] + "," + $IncrementSplit)))){
+                            $OUName = ($OUSplitArray[$SplitCounter]).TrimStart("OU=")
+                            Try{
+                                New-ADOrganizationalUnit -Name $OUName -Path $IncrementSplit -ErrorAction Stop
+                            }
+                            Catch{
+                                $NewOUError = ("Creation of the OU " + ($OUSplitArray[$SplitCounter] + "," + $IncrementSplit) + " failed miserably.")
+                            }
+                            If($NewOUError){
+                                $OUCreationOutputMessage += $NewOUError
+                                $SplitCounter = (-1)
+                            }
+                        }
+                        $IncrementSplit = ($OUSplitArray[$SplitCounter] + "," + $IncrementSplit)
+                        $SplitCounter --
+                    }
+                    Until($SplitCounter -eq -1)
+                    $OUCreationOutputMessage += "The OU $OUDistinguishedName was successfully created."
+                    # Results message; remark out if no message is desired.
+                    $OUCreationOutputMessage
                 }
-                Until($SplitCounter -eq -1)
-                $OUCreationOutputMessage += "The OU $OUDistinguishedName was successfully created."
-                # Results message; remark out if no message is desired.
-                $OUCreationOutputMessage
             }
         }
     }
