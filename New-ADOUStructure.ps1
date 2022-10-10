@@ -31,8 +31,6 @@ Function New-ADOUStructure {
 
     [CmdletBinding(SupportsShouldProcess)]
     Param(
-        # Stage output array
-        $OUCreationOutputMessage = @()
         [Parameter(Mandatory,
         HelpMessage='What is the distinguished name of the Active Directory Organization Unit you would like to create?')]
 
@@ -41,6 +39,8 @@ Function New-ADOUStructure {
     )
 
     Process{
+        # Stage output array
+        $OUCreationOutputMessage = @()
         If($PSCmdlet.ShouldProcess($OUDistinguishedName)){
             # Validate distinguished name format
             If($OUDistinguishedName -match "^(?:(?:OU|DC)\=\w+,)*DC\=\w+$"){
