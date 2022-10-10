@@ -95,7 +95,7 @@ Function New-ADOUStructure {
             }
         }
         Else{
-            $OUCreationOutputMessage += "The 'WhatIF' parameter was used. Function will not run."
+            $OUCreationOutputMessage += "The 'WhatIF' parameter was used. Simulate creating $OUDistinguishedName."
         }
         # Results message; remark out if no message is desired.
         $OUCreationOutputMessage
