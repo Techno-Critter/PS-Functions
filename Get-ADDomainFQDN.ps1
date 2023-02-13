@@ -35,6 +35,8 @@ Function Get-ADDomainFQDN{
         ValueFromPipelineByPropertyName = $true,
         HelpMessage = 'What is the distinguished name of the AD object you would like the fully qualified domain name for?')]
 
+        [ValidatePattern("^(?:(?:OU|CN|DC)\=\w+,)*DC\=\w+$")]
+
         [string]
         $ADObjectDistinguishedName
     )
@@ -44,12 +46,10 @@ Function Get-ADDomainFQDN{
         $FQDNOutput = @()
         $DCElements = $null
 
-        $FQDNString = $ADObjectDistinguishedName -split '\,'
+        $FQDNString = $ADObjectDistinguishedName -split '\,' | Where-Object{$_ -match '^DC='}
         ForEach($FQDNElement in $FQDNString){
-            If($FQDNElement -match 'DC='){
-                $DCElements = $FQDNElement -split '='
-                $FQDNOutput += $DCElements[1]
-            }
+            $DCElements = $FQDNElement -split '='
+            $FQDNOutput += $DCElements[1]
         }
         $FQDNOutput -join '.'
     }
