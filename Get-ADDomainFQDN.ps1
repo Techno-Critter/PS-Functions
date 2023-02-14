@@ -35,7 +35,7 @@ Function Get-ADDomainFQDN{
         ValueFromPipelineByPropertyName = $true,
         HelpMessage = 'What is the distinguished name of the AD object you would like the fully qualified domain name for?')]
 
-        [ValidatePattern("^(?:(?:OU|CN|DC)\=\w+,)*DC\=\w+$")]
+        [ValidatePattern("^(?:(?:CN|OU|DC)\=(?:\w|[ ])+,)*DC\=\w+$")]
 
         [string]
         $ADObjectDistinguishedName
